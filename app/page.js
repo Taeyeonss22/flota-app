@@ -1,10 +1,12 @@
 "use client";
 import AuthGuard from '@/components/AuthGuard';
-import { Truck, Map, Fuel, Users, AlertTriangle, CheckCircle, Wrench } from 'lucide-react';
+import { Truck, Map, Fuel, Users, AlertTriangle, CheckCircle, Wrench, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { differenceInDays } from 'date-fns';
+import { differenceInDays, startOfDay, startOfWeek, startOfMonth } from 'date-fns';
+import { useRouter } from 'next/navigation';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
 export default function Home() {
   const [role, setRole] = useState(null);
@@ -15,7 +17,47 @@ export default function Home() {
     kmMes: 0
   });
   const [alertas, setAlertas] = useState([]);
+  const [pedidosStats, setPedidosStats] = useState([]);
+  const [pedidosPeriod, setPedidosPeriod] = useState('hoy');
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  const fetchPedidosData = async (period) => {
+    const now = new Date();
+    let startDate;
+
+    if (period === 'hoy') {
+      startDate = startOfDay(now).toISOString();
+    } else if (period === 'semana') {
+      startDate = startOfWeek(now, { weekStartsOn: 1 }).toISOString();
+    } else if (period === 'mes') {
+      startDate = startOfMonth(now).toISOString();
+    }
+
+    const { data } = await supabase
+      .from('pedidos')
+      .select('estado')
+      .gte('fecha_entrega_programada', startDate);
+
+    if (data) {
+      const counts = { entregado: 0, pendiente: 0, en_ruta: 0, no_entregado: 0, cancelado: 0 };
+      data.forEach(p => {
+        if (counts[p.estado] !== undefined) {
+          counts[p.estado]++;
+        }
+      });
+
+      const chartData = [
+        { name: 'entregado', value: counts.entregado, color: '#22c55e', label: 'Entregados' },
+        { name: 'pendiente', value: counts.pendiente, color: '#f59e0b', label: 'Pendientes' },
+        { name: 'en_ruta', value: counts.en_ruta, color: '#3b82f6', label: 'En Ruta' },
+        { name: 'no_entregado', value: counts.no_entregado, color: '#ef4444', label: 'No Entregados' },
+        { name: 'cancelado', value: counts.cancelado, color: '#94a3b8', label: 'Cancelados' }
+      ].filter(item => item.value > 0);
+
+      setPedidosStats(chartData);
+    }
+  };
 
   useEffect(() => {
     async function loadDashboard() {
@@ -124,6 +166,27 @@ export default function Home() {
     loadDashboard();
   }, []);
 
+  useEffect(() => {
+    if (role === 'admin') {
+      fetchPedidosData(pedidosPeriod);
+    }
+  }, [pedidosPeriod, role]);
+
+  useEffect(() => {
+    if (role === 'admin') {
+      const channel = supabase
+        .channel('dashboard_pedidos')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, () => {
+          fetchPedidosData(pedidosPeriod);
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [pedidosPeriod, role]);
+
   if (loading) return null;
 
   return (
@@ -155,6 +218,73 @@ export default function Home() {
                 <span className="text-secondary text-sm font-medium">Mant. Pendientes</span>
                 <span className={`text-3xl font-bold ${stats.mantenimientosPendientes > 0 ? 'text-warning' : 'text-success'}`}>{stats.mantenimientosPendientes}</span>
               </div>
+            </div>
+
+            {/* Pedidos Chart */}
+            <div className="glass-panel p-6 mb-8 relative">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="font-semibold text-lg text-primary">Pedidos Entregados vs Pendientes</h3>
+                <select
+                  className="form-input !w-auto !py-1 !px-3 text-sm"
+                  value={pedidosPeriod}
+                  onChange={(e) => setPedidosPeriod(e.target.value)}
+                >
+                  <option value="hoy">Hoy</option>
+                  <option value="semana">Esta Semana</option>
+                  <option value="mes">Este Mes</option>
+                </select>
+              </div>
+
+              {pedidosStats.length === 0 ? (
+                <div className="text-center text-secondary py-12">No hay pedidos en este periodo.</div>
+              ) : (
+                <div className="flex flex-col md:flex-row items-center gap-8">
+                  <div style={{ width: '100%', maxWidth: '350px', height: '250px' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={pedidosStats}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={90}
+                          paddingAngle={5}
+                          dataKey="value"
+                          onClick={(entry) => {
+                            router.push(`/admin/pedidos?estado=${entry.name}`);
+                          }}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          {pedidosStats.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          formatter={(value, name, props) => [value, props.payload.label]}
+                          contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  
+                  <div className="flex flex-col gap-4 min-w-[200px]">
+                    <div className="text-sm text-secondary mb-2">Total: {pedidosStats.reduce((acc, curr) => acc + curr.value, 0)} pedidos</div>
+                    {pedidosStats.map((stat, i) => (
+                      <div 
+                        key={i} 
+                        className="flex justify-between items-center cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors -mx-2"
+                        onClick={() => router.push(`/admin/pedidos?estado=${stat.name}`)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: stat.color }}></div>
+                          <span className="font-medium text-sm">{stat.label}</span>
+                        </div>
+                        <span className="font-bold">{stat.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Alertas */}

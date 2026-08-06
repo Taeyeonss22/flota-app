@@ -1,13 +1,14 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import AuthGuard from '@/components/AuthGuard';
 import DataTable from '@/components/DataTable';
 import MapPicker from '@/components/MapPicker';
 import { supabase } from '@/lib/supabase';
 import { Plus, X, MapPin, CheckCircle2, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
+import { useSearchParams, useRouter } from 'next/navigation';
 
-export default function PedidosPage() {
+function PedidosContent() {
   const [pedidos, setPedidos] = useState([]);
   const [vehiculos, setVehiculos] = useState([]);
   const [choferes, setChoferes] = useState([]);
@@ -21,7 +22,11 @@ export default function PedidosPage() {
   const [showReassignForm, setShowReassignForm] = useState(false);
   const [reassignData, setReassignData] = useState({ chofer_id: '', vehiculo_id: '' });
 
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  
   const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0]);
+  const [statusFilter, setStatusFilter] = useState(searchParams?.get('estado') || '');
 
   const [formData, setFormData] = useState({
     folio_venta_pos: '',
@@ -59,14 +64,24 @@ export default function PedidosPage() {
 
   useEffect(() => {
     fetchData();
+
+    // Subscribe to realtime changes in pedidos
     const channel = supabase
       .channel('pedidos_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, () => {
         fetchData();
       })
       .subscribe();
-    return () => supabase.removeChannel(channel);
-  }, [filterDate]);
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const filteredPedidos = pedidos.filter(p => {
+    if (statusFilter && p.estado !== statusFilter) return false;
+    return true;
+  });
 
   const handleOpenModal = () => {
     setFormData({
@@ -210,18 +225,42 @@ export default function PedidosPage() {
   return (
     <AuthGuard requireAdmin={true}>
       <>
-        <div className="animate-fade-in">
-          <div className="page-header">
-            <h1 className="page-title">Pedidos del Día</h1>
-            <div className="flex gap-4">
-              <input type="date" className="form-input" value={filterDate} onChange={e => setFilterDate(e.target.value)} />
-              <button className="btn btn-primary" onClick={handleOpenModal}>
-                <Plus size={18} /> Nuevo Pedido
-              </button>
+        <div className="page-header flex justify-between items-center flex-wrap gap-4">
+          <h1 className="page-title">Pedidos / Entregas</h1>
+          <button className="btn-primary" onClick={() => setShowModal(true)}>
+            <Plus size={20} />
+            Nuevo Pedido
+          </button>
+        </div>
+
+        <div className="glass-panel p-6 mb-6">
+          <div className="flex flex-wrap gap-4 mb-4">
+            <div className="flex-1 min-w-[200px]">
+              <label className="form-label">Filtrar por Estado</label>
+              <select 
+                className="form-input" 
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  const newParams = new URLSearchParams(searchParams.toString());
+                  if (e.target.value) {
+                    newParams.set('estado', e.target.value);
+                  } else {
+                    newParams.delete('estado');
+                  }
+                  router.replace(`?${newParams.toString()}`);
+                }}
+              >
+                <option value="">Todos los estados</option>
+                <option value="pendiente">Pendiente</option>
+                <option value="en_ruta">En Ruta</option>
+                <option value="entregado">Entregado</option>
+                <option value="no_entregado">No Entregado</option>
+                <option value="cancelado">Cancelado</option>
+              </select>
             </div>
           </div>
-
-          <DataTable columns={columns} data={pedidos} loading={loading} />
+          <DataTable data={filteredPedidos} columns={columns} onRowClick={setSelectedPedido} />
         </div>
 
         {/* CREATE MODAL */}
@@ -427,5 +466,13 @@ export default function PedidosPage() {
         )}
       </>
     </AuthGuard>
+  );
+}
+
+export default function PedidosPage() {
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <PedidosContent />
+    </Suspense>
   );
 }
