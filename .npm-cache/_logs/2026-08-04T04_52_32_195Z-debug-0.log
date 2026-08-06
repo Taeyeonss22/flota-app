@@ -1,0 +1,66 @@
+0 verbose cli /usr/local/bin/node /usr/local/bin/npm
+1 info using npm@11.16.0
+2 info using node@v24.18.1
+3 silly config load:file:/usr/local/lib/node_modules/npm/npmrc
+4 silly config load:file:/Users/rafaeltoledanojuarez/.gemini/antigravity/scratch/flota-app/.npmrc
+5 silly config load:file:/Users/rafaeltoledanojuarez/.npmrc
+6 silly config load:file:/usr/local/etc/npmrc
+7 verbose title npm install recharts date-fns lucide-react
+8 verbose argv "install" "recharts" "date-fns" "lucide-react" "--cache" ".npm-cache"
+9 verbose logfile logs-max:10 dir:/Users/rafaeltoledanojuarez/.gemini/antigravity/scratch/flota-app/.npm-cache/_logs/2026-08-04T04_52_32_195Z-
+10 verbose logfile /Users/rafaeltoledanojuarez/.gemini/antigravity/scratch/flota-app/.npm-cache/_logs/2026-08-04T04_52_32_195Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:4496293888 maxSize:1124073472 maxEntrySize:562036736
+13 silly idealTree buildDeps
+14 silly fetch manifest lucide-react@^1.28.0
+15 silly packumentCache full:https://registry.npmjs.org/lucide-react cache-miss
+16 http fetch GET https://registry.npmjs.org/lucide-react attempt 1 failed with ENOTFOUND
+17 http fetch GET https://registry.npmjs.org/lucide-react attempt 2 failed with ENOTFOUND
+18 http fetch GET https://registry.npmjs.org/lucide-react attempt 3 failed with ENOTFOUND
+19 http fetch GET 200 https://registry.npmjs.org/lucide-react 70075ms (cache stale)
+20 silly packumentCache full:https://registry.npmjs.org/lucide-react set size:2302993 disposed:false
+21 silly fetch manifest react@19.2.8
+22 silly packumentCache full:https://registry.npmjs.org/react cache-miss
+23 http fetch GET https://registry.npmjs.org/react attempt 1 failed with ENOTFOUND
+24 http fetch GET https://registry.npmjs.org/react attempt 2 failed with ENOTFOUND
+25 http fetch GET https://registry.npmjs.org/react attempt 3 failed with ENOTFOUND
+26 http fetch GET 200 https://registry.npmjs.org/react 70041ms (cache stale)
+27 silly packumentCache full:https://registry.npmjs.org/react set size:6863945 disposed:false
+28 silly fetch manifest recharts@*
+29 silly packumentCache full:https://registry.npmjs.org/recharts cache-miss
+30 http fetch GET https://registry.npmjs.org/recharts attempt 1 failed with ENOTFOUND
+31 http fetch GET https://registry.npmjs.org/recharts attempt 2 failed with ENOTFOUND
+32 http fetch GET https://registry.npmjs.org/recharts attempt 3 failed with ENOTFOUND
+33 silly fetch manifest date-fns@*
+34 silly packumentCache full:https://registry.npmjs.org/date-fns cache-miss
+35 http fetch GET https://registry.npmjs.org/date-fns attempt 1 failed with ENOTFOUND
+36 http fetch GET https://registry.npmjs.org/date-fns attempt 2 failed with ENOTFOUND
+37 http fetch GET https://registry.npmjs.org/date-fns attempt 3 failed with ENOTFOUND
+38 silly placeDep ROOT date-fns@ OK for: flota-app@0.1.0 want: *
+39 silly placeDep ROOT lucide-react@1.28.0 REPLACE for: flota-app@0.1.0 want: ^1.28.0
+40 silly placeDep ROOT recharts@ OK for: flota-app@0.1.0 want: *
+41 verbose type system
+42 verbose stack FetchError: request to https://registry.npmjs.org/date-fns failed, reason: getaddrinfo ENOTFOUND registry.npmjs.org
+42 verbose stack     at ClientRequest.<anonymous> (/usr/local/lib/node_modules/npm/node_modules/minipass-fetch/lib/index.js:130:14)
+42 verbose stack     at ClientRequest.emit (node:events:509:28)
+42 verbose stack     at emitErrorEvent (node:_http_client:109:11)
+42 verbose stack     at _destroy (node:_http_client:993:9)
+42 verbose stack     at onSocketNT (node:_http_client:1014:5)
+42 verbose stack     at process.processTicksAndRejections (node:internal/process/task_queues:91:21)
+43 error code ENOTFOUND
+44 error syscall getaddrinfo
+45 error errno ENOTFOUND
+46 error network request to https://registry.npmjs.org/date-fns failed, reason: getaddrinfo ENOTFOUND registry.npmjs.org
+47 error network This is a problem related to network connectivity.
+47 error network In most cases you are behind a proxy or have bad network settings.
+47 error network
+47 error network If you are behind a proxy, please make sure that the 'proxy' config is set properly.  See: 'npm help config'
+48 silly unfinished npm timer reify 1785819152447
+49 silly unfinished npm timer reify:loadTrees 1785819152447
+50 verbose cwd /Users/rafaeltoledanojuarez/.gemini/antigravity/scratch/flota-app
+51 verbose os Darwin 25.5.0
+52 verbose node v24.18.1
+53 verbose npm  v11.16.0
+54 verbose exit 1
+55 verbose code 1
+56 error A complete log of this run can be found in: /Users/rafaeltoledanojuarez/.gemini/antigravity/scratch/flota-app/.npm-cache/_logs/2026-08-04T04_52_32_195Z-debug-0.log
