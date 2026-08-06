@@ -42,11 +42,14 @@ export default function LoginPage() {
   return (
     <div className="flex items-center justify-center animate-fade-in" style={{ minHeight: '80vh' }}>
       <div className="glass-panel" style={{ width: '100%', maxWidth: '400px', padding: '2rem' }}>
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <LayoutDashboard size={48} className="text-accent-primary" />
+        <div className="text-center mb-8 flex flex-col items-center">
+          <div className="flex justify-center mb-6 w-full max-w-[200px]">
+            <img 
+              src="/logo-ferremix.png" 
+              alt="FerreMix Logo" 
+              className="w-full h-auto object-contain"
+            />
           </div>
-          <h1 className="text-2xl font-bold">FlotaApp</h1>
           <p className="text-secondary">Inicia sesión para continuar</p>
         </div>
         
