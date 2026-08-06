@@ -16,6 +16,10 @@ export default function PedidosPage() {
   const [showModal, setShowModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedPedido, setSelectedPedido] = useState(null);
+  const [showCancelForm, setShowCancelForm] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [showReassignForm, setShowReassignForm] = useState(false);
+  const [reassignData, setReassignData] = useState({ chofer_id: '', vehiculo_id: '' });
 
   const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0]);
 
@@ -119,6 +123,56 @@ export default function PedidosPage() {
     }
   };
 
+  const handleCancelPedido = async (e) => {
+    e.preventDefault();
+    if (!cancelReason.trim()) return alert('Debe proveer un motivo de cancelación');
+    
+    const { error } = await supabase
+      .from('pedidos')
+      .update({ estado: 'cancelado', motivo_cancelacion: cancelReason })
+      .eq('id', selectedPedido.id);
+
+    if (error) alert("Error: " + error.message);
+    else {
+      setShowDetailModal(false);
+      setShowCancelForm(false);
+      setCancelReason('');
+    }
+  };
+
+  const handleReassignPedido = async (e) => {
+    e.preventDefault();
+    if (!reassignData.chofer_id || !reassignData.vehiculo_id) return alert('Seleccione chofer y vehículo');
+    
+    const { error } = await supabase
+      .from('pedidos')
+      .update({ 
+        chofer_id: reassignData.chofer_id, 
+        vehiculo_id: reassignData.vehiculo_id,
+        reasignado_de: selectedPedido.chofer_id
+      })
+      .eq('id', selectedPedido.id);
+
+    if (error) alert("Error: " + error.message);
+    else {
+      // Notificar al nuevo chofer
+      fetch('/api/notificaciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chofer_id: reassignData.chofer_id,
+          folio_venta_pos: selectedPedido.folio_venta_pos,
+          cliente_nombre: selectedPedido.cliente_nombre,
+          pedido_id: selectedPedido.id
+        })
+      }).catch(err => console.error("Error API Push:", err));
+
+      setShowDetailModal(false);
+      setShowReassignForm(false);
+      setReassignData({ chofer_id: '', vehiculo_id: '' });
+    }
+  };
+
   const statusColors = {
     'pendiente': 'badge-warning',
     'en_ruta': 'badge-primary',
@@ -137,7 +191,14 @@ export default function PedidosPage() {
       key: 'actions', 
       label: 'Acciones', 
       render: (_, row) => (
-        <button className="btn btn-secondary text-sm py-1 px-2" onClick={() => { setSelectedPedido(row); setShowDetailModal(true); }}>
+        <button className="btn btn-secondary text-sm py-1 px-2" onClick={() => { 
+          setSelectedPedido(row); 
+          setShowCancelForm(false);
+          setShowReassignForm(false);
+          setCancelReason('');
+          setReassignData({ chofer_id: '', vehiculo_id: '' });
+          setShowDetailModal(true); 
+        }}>
           Detalles
         </button>
       ) 
@@ -251,7 +312,7 @@ export default function PedidosPage() {
                <div className="flex-1 flex flex-col gap-3">
                  <div><strong className="text-secondary text-sm">Cliente:</strong><p className="text-lg">{selectedPedido.cliente_nombre}</p></div>
                  <div><strong className="text-secondary text-sm">Dirección:</strong><p>{selectedPedido.cliente_direccion}</p></div>
-                 <div><strong className="text-secondary text-sm">Estado:</strong><p><span className={`badge ${statusColors[selectedPedido.estado]}`}>{selectedPedido.estado.replace('_', ' ')}</span></p></div>
+                 <div><strong className="text-secondary text-sm">Estado:</strong><p><span className={`badge ${statusColors[selectedPedido.estado] || 'bg-gray-500 text-white'}`}>{selectedPedido.estado.replace('_', ' ')}</span></p></div>
                  <div><strong className="text-secondary text-sm">Chofer:</strong><p>{selectedPedido.choferes?.nombre}</p></div>
                  <div><strong className="text-secondary text-sm">Vehículo:</strong><p>{selectedPedido.vehiculos?.placa}</p></div>
                  <div><strong className="text-secondary text-sm">Fecha:</strong><p>{selectedPedido.fecha_entrega_programada}</p></div>
@@ -274,10 +335,16 @@ export default function PedidosPage() {
                    </div>
                  )}
                  <div><strong className="text-secondary text-sm">Observaciones:</strong><p>{selectedPedido.observaciones || 'Ninguna'}</p></div>
-               </div>
+                  {selectedPedido.estado === 'cancelado' && (
+                    <div><strong className="text-danger text-sm">Motivo Cancelación:</strong><p>{selectedPedido.motivo_cancelacion}</p></div>
+                  )}
+                  {selectedPedido.reasignado_de && (
+                    <div><strong className="text-warning text-sm">Reasignado:</strong><p>Este pedido fue reasignado.</p></div>
+                  )}
+                </div>
 
-               <div className="flex-1 flex flex-col">
-                 <strong className="text-secondary text-sm mb-2">Ubicación</strong>
+                <div className="flex-1 flex flex-col">
+                  <strong className="text-secondary text-sm mb-2">Ubicación & Acciones</strong>
                  <div style={{ flex: 1, minHeight: '300px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)' }}>
                    {selectedPedido.cliente_latitud ? (
                      <MapPicker location={[selectedPedido.cliente_latitud, selectedPedido.cliente_longitud]} />
@@ -285,8 +352,52 @@ export default function PedidosPage() {
                      <div className="flex items-center justify-center h-full bg-gray-100 text-secondary">Sin coordenadas GPS</div>
                    )}
                  </div>
-               </div>
-             </div>
+                  
+                  {/* Cancel / Reassign Action Buttons */}
+                  <div className="mt-4 flex gap-2 flex-wrap">
+                    {(selectedPedido.estado === 'pendiente' || selectedPedido.estado === 'en_ruta') && !showCancelForm && !showReassignForm && (
+                      <button className="btn btn-secondary text-danger" onClick={() => setShowCancelForm(true)}>Cancelar Pedido</button>
+                    )}
+                    {selectedPedido.estado === 'pendiente' && !showCancelForm && !showReassignForm && (
+                      <button className="btn btn-secondary text-primary" onClick={() => setShowReassignForm(true)}>Reasignar Pedido</button>
+                    )}
+                  </div>
+
+                  {/* Cancel Form */}
+                  {showCancelForm && (
+                    <form onSubmit={handleCancelPedido} className="mt-4 p-4 border border-[var(--border)] rounded-lg bg-[var(--bg-secondary)]">
+                      <h4 className="font-bold text-danger mb-2">Cancelar Pedido</h4>
+                      <label className="form-label text-sm">Motivo de cancelación</label>
+                      <input required type="text" className="form-input mb-2" placeholder="Ej. Cliente canceló" value={cancelReason} onChange={e => setCancelReason(e.target.value)} />
+                      <div className="flex gap-2 justify-end">
+                        <button type="button" className="btn btn-secondary text-sm" onClick={() => setShowCancelForm(false)}>Atrás</button>
+                        <button type="submit" className="btn bg-red-600 text-white text-sm">Confirmar Cancelación</button>
+                      </div>
+                    </form>
+                  )}
+
+                  {/* Reassign Form */}
+                  {showReassignForm && (
+                    <form onSubmit={handleReassignPedido} className="mt-4 p-4 border border-[var(--border)] rounded-lg bg-[var(--bg-secondary)]">
+                      <h4 className="font-bold text-primary mb-2">Reasignar Pedido</h4>
+                      <label className="form-label text-sm">Nuevo Chofer</label>
+                      <select required className="form-select mb-2" value={reassignData.chofer_id} onChange={e => setReassignData({...reassignData, chofer_id: e.target.value})}>
+                        <option value="" disabled>Seleccione...</option>
+                        {choferes.filter(c => c.id !== selectedPedido.chofer_id).map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                      </select>
+                      <label className="form-label text-sm">Nuevo Vehículo</label>
+                      <select required className="form-select mb-2" value={reassignData.vehiculo_id} onChange={e => setReassignData({...reassignData, vehiculo_id: e.target.value})}>
+                        <option value="" disabled>Seleccione...</option>
+                        {vehiculos.filter(v => v.id !== selectedPedido.vehiculo_id).map(v => <option key={v.id} value={v.id}>{v.placa}</option>)}
+                      </select>
+                      <div className="flex gap-2 justify-end mt-2">
+                        <button type="button" className="btn btn-secondary text-sm" onClick={() => setShowReassignForm(false)}>Atrás</button>
+                        <button type="submit" className="btn btn-primary text-sm">Confirmar Reasignación</button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+              </div>
            </div>
          </div>
         )}

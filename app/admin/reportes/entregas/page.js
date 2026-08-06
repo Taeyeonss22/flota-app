@@ -35,6 +35,7 @@ export default function ReporteEntregasPage() {
           const totales = choferPedidos.length;
           const entregados = choferPedidos.filter(p => p.estado === 'entregado').length;
           const noEntregados = choferPedidos.filter(p => p.estado === 'no_entregado').length;
+          const cancelados = choferPedidos.filter(p => p.estado === 'cancelado').length;
           const pendientes = choferPedidos.filter(p => p.estado === 'pendiente' || p.estado === 'en_ruta').length;
           const efectividad = totales > 0 ? Math.round((entregados / totales) * 100) : 0;
           
@@ -43,6 +44,7 @@ export default function ReporteEntregasPage() {
             totales,
             entregados,
             noEntregados,
+            cancelados,
             pendientes,
             efectividad
           };
@@ -81,6 +83,7 @@ export default function ReporteEntregasPage() {
                     <th className="text-center">Total Asignados</th>
                     <th className="text-center text-success">Entregados</th>
                     <th className="text-center text-danger">No Entregados</th>
+                    <th className="text-center text-gray-400">Cancelados</th>
                     <th className="text-center text-warning">Pendientes / En Ruta</th>
                     <th className="text-center">Efectividad</th>
                   </tr>
@@ -92,6 +95,7 @@ export default function ReporteEntregasPage() {
                       <td className="text-center font-bold">{row.totales}</td>
                       <td className="text-center text-success font-semibold">{row.entregados}</td>
                       <td className="text-center text-danger font-semibold">{row.noEntregados}</td>
+                      <td className="text-center text-gray-400 font-semibold">{row.cancelados}</td>
                       <td className="text-center text-warning font-semibold">{row.pendientes}</td>
                       <td className="text-center">
                         <div className="flex items-center justify-center gap-2">
@@ -105,7 +109,7 @@ export default function ReporteEntregasPage() {
                   ))}
                   {reportData.length === 0 && (
                     <tr>
-                      <td colSpan="6" className="text-center py-4 text-secondary">No hay datos de pedidos en este periodo.</td>
+                      <td colSpan="7" className="text-center py-4 text-secondary">No hay datos de pedidos en este periodo.</td>
                     </tr>
                   )}
                 </tbody>
