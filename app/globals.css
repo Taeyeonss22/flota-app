@@ -305,6 +305,18 @@ a:hover {
   letter-spacing: -0.025em;
 }
 
+/* Text Colors */
+.text-primary { color: var(--text-primary) !important; }
+.text-secondary { color: var(--text-secondary) !important; }
+.text-tertiary { color: var(--text-tertiary) !important; }
+.text-danger { color: var(--danger) !important; }
+.text-warning { color: var(--warning) !important; }
+.text-success { color: var(--success) !important; }
+.text-white { color: #ffffff !important; }
+.font-bold { font-weight: 700; }
+.font-semibold { font-weight: 600; }
+.font-medium { font-weight: 500; }
+
 /* Animations */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
@@ -425,6 +437,7 @@ a:hover {
   overflow-y: auto;
   position: relative;
   z-index: 1;
+  color: var(--text-primary) !important; /* Force text to be dark */
 }
 
 /* Mobile Sidebar Overlay */
