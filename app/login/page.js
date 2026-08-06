@@ -45,7 +45,7 @@ export default function LoginPage() {
         <div className="text-center mb-8 flex flex-col items-center">
           <div className="flex justify-center mb-6 w-full max-w-[200px]">
             <img 
-              src="/logo-ferremix.png" 
+              src="/logo-ferremix.jpg" 
               alt="FerreMix Logo" 
               className="w-full h-auto object-contain"
             />
