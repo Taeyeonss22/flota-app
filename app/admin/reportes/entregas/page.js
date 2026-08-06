@@ -15,7 +15,7 @@ export default function ReporteEntregasPage() {
       
       const { data: choferes } = await supabase.from('choferes').select('id, nombre').eq('estado', 'activo');
       
-      let query = supabase.from('pedidos').select('chofer_id, estado');
+      let query = supabase.from('pedidos').select('chofer_id, estado, choferes!pedidos_chofer_id_fkey(nombre)');
       
       const now = new Date();
       if (periodo === 'semana') {

@@ -39,7 +39,7 @@ export default function PedidosPage() {
     setLoading(true);
     const { data: pData, error: pError } = await supabase
       .from('pedidos')
-      .select('*, vehiculos(placa), choferes(nombre)')
+      .select('*, vehiculos(placa), choferes!pedidos_chofer_id_fkey(nombre)')
       .order('created_at', { ascending: false });
       
     if (pError) console.error("Error fetching pedidos:", pError);
