@@ -42,13 +42,9 @@ export default function LoginPage() {
   return (
     <div className="flex items-center justify-center animate-fade-in" style={{ minHeight: '80vh' }}>
       <div className="glass-panel" style={{ width: '100%', maxWidth: '400px', padding: '2rem' }}>
-        <div className="text-center mb-6">
-          <img 
-            src="/logo-ferremix.jpg" 
-            alt="FerreMix Logo" 
-            className="w-48 mx-auto object-contain"
-          />
-          <p className="text-secondary mt-4">Inicia sesión para continuar</p>
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-primary mb-2" style={{ color: 'var(--primary)' }}>FERREMIX</h1>
+          <p className="text-secondary mt-2">Inicia sesión para continuar</p>
         </div>
         
         <form onSubmit={handleLogin}>
