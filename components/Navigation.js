@@ -79,8 +79,11 @@ export default function Navigation({ children }) {
           <Link href="/admin/choferes" className={`btn-nav ${pathname.includes('/choferes') ? 'btn-nav-active' : ''}`}>
             <Users size={18} /> Choferes
           </Link>
-          <Link href="/admin/recorridos" className={`btn-nav ${pathname.includes('/recorridos') ? 'btn-nav-active' : ''}`}>
+          <Link href="/recorridos" className={`btn-nav ${pathname.includes('/recorridos') ? 'btn-nav-active' : ''}`}>
              <Map size={18} /> Recorridos
+          </Link>
+          <Link href="/combustible" className={`btn-nav ${pathname.includes('/combustible') ? 'btn-nav-active' : ''}`}>
+            <Fuel size={18} /> Cargas de Combustible
           </Link>
           <Link href="/admin/mantenimientos" className={`btn-nav ${pathname.includes('/mantenimientos') ? 'btn-nav-active' : ''}`}>
             <Wrench size={18} /> Mantenimientos
