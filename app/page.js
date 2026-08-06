@@ -20,7 +20,10 @@ export default function Home() {
   useEffect(() => {
     async function loadDashboard() {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session) {
+        setLoading(false);
+        return;
+      }
 
       const { data: perfil } = await supabase.from('perfiles').select('rol').eq('id', session.user.id).single();
       if (perfil) setRole(perfil.rol);
