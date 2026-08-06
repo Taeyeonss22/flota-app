@@ -4,7 +4,7 @@ import AuthGuard from '@/components/AuthGuard';
 import DataTable from '@/components/DataTable';
 import MapPicker from '@/components/MapPicker';
 import { supabase } from '@/lib/supabase';
-import { Plus, X, MapPin } from 'lucide-react';
+import { Plus, X, MapPin, CheckCircle2, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function PedidosPage() {
@@ -26,6 +26,7 @@ export default function PedidosPage() {
   const [formData, setFormData] = useState({
     folio_venta_pos: '',
     cliente_nombre: '',
+    cliente_telefono: '',
     cliente_direccion: '',
     cliente_latitud: null,
     cliente_longitud: null,
@@ -71,6 +72,7 @@ export default function PedidosPage() {
     setFormData({
       folio_venta_pos: '',
       cliente_nombre: '',
+      cliente_telefono: '',
       cliente_direccion: '',
       cliente_latitud: null,
       cliente_longitud: null,
@@ -246,6 +248,11 @@ export default function PedidosPage() {
                   </div>
 
                   <div className="form-group">
+                    <label className="form-label">Teléfono del Cliente (WhatsApp)</label>
+                    <input required type="tel" placeholder="Ej. +525512345678" pattern="^\+?[1-9]\d{9,14}$" title="El teléfono debe tener formato internacional (Ej. +52...)" className="form-input" value={formData.cliente_telefono} onChange={e => setFormData({...formData, cliente_telefono: e.target.value})} />
+                  </div>
+
+                  <div className="form-group">
                     <label className="form-label">Dirección Completa</label>
                     <input required type="text" className="form-input" value={formData.cliente_direccion} onChange={e => setFormData({...formData, cliente_direccion: e.target.value})} />
                   </div>
@@ -311,6 +318,9 @@ export default function PedidosPage() {
              <div className="flex gap-6 flex-wrap md:flex-nowrap">
                <div className="flex-1 flex flex-col gap-3">
                  <div><strong className="text-secondary text-sm">Cliente:</strong><p className="text-lg">{selectedPedido.cliente_nombre}</p></div>
+                 {selectedPedido.cliente_telefono && (
+                   <div><strong className="text-secondary text-sm">Teléfono:</strong><p>{selectedPedido.cliente_telefono}</p></div>
+                 )}
                  <div><strong className="text-secondary text-sm">Dirección:</strong><p>{selectedPedido.cliente_direccion}</p></div>
                  <div><strong className="text-secondary text-sm">Estado:</strong><p><span className={`badge ${statusColors[selectedPedido.estado] || 'bg-gray-500 text-white'}`}>{selectedPedido.estado.replace('_', ' ')}</span></p></div>
                  <div><strong className="text-secondary text-sm">Chofer:</strong><p>{selectedPedido.choferes?.nombre}</p></div>
@@ -340,6 +350,20 @@ export default function PedidosPage() {
                   )}
                   {selectedPedido.reasignado_de && (
                     <div><strong className="text-warning text-sm">Reasignado:</strong><p>Este pedido fue reasignado.</p></div>
+                  )}
+                  {selectedPedido.cliente_telefono && (
+                    <div>
+                      <strong className="text-secondary text-sm">WhatsApp Automático:</strong>
+                      <p>
+                        {selectedPedido.whatsapp_enviado ? (
+                          <span className="text-success flex items-center gap-1"><CheckCircle2 size={14}/> Enviado</span>
+                        ) : selectedPedido.whatsapp_error ? (
+                          <span className="text-danger flex items-center gap-1"><XCircle size={14}/> Error: {selectedPedido.whatsapp_error}</span>
+                        ) : (
+                          <span className="text-secondary">Pendiente (Se enviará al iniciar ruta)</span>
+                        )}
+                      </p>
+                    </div>
                   )}
                 </div>
 
